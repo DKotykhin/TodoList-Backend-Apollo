@@ -1,0 +1,38 @@
+{
+  "name": "todolist-backend-apollo",
+  "version": "1.0.0",
+  "description": "Node JS backend for TodoList",
+  "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "NodeJS",
+    "MongoDB",
+    "GraphQL",
+    "Multer",
+    "Yup"
+  ],
+  "author": "Dmytro <kotykhin.d@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.3.0",
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "graphql": "^16.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.7.3",
+    "multer": "^1.4.5-lts.1",
+    "yup": "^0.32.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
