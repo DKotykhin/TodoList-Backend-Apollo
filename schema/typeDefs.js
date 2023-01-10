@@ -77,7 +77,7 @@ export const typeDefs = `#graphql
         search: String
     }
     input TaskInput {
-        _id: ID!       
+        _id: ID       
         title: String!
         subtitle: String
         description: String

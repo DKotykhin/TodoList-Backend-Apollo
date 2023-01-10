@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import fs from 'fs';
 
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
