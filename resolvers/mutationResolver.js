@@ -6,6 +6,7 @@ import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
 import { checkAuth } from '../middlewares/checkAuth.js';
 import { userValidate } from '../validation/validation.js';
+import { taskValidate } from '../validation/validation.js';
 
 const generateToken = (_id) => {
     return jwt.sign(
