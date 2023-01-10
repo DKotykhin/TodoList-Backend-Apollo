@@ -1,20 +1,12 @@
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { GraphQLError } from 'graphql';
 
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
 import { checkAuth } from '../middlewares/checkAuth.js';
-import { findUser } from '../middlewares/findUser.js';
+import { findUser } from '../utils/findUser.js';
+import { generateToken } from '../utils/generateToken.js'
 import { userValidate } from '../validation/validation.js';
-
-const generateToken = (_id) => {
-    return jwt.sign(
-        { _id },
-        process.env.SECRET_KEY,
-        { expiresIn: "2d" }
-    )
-};
 
 const queryResolver = {
     Query: {

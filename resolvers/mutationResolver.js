@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import { GraphQLError } from 'graphql';
@@ -6,22 +5,11 @@ import { GraphQLError } from 'graphql';
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
 import { checkAuth } from '../middlewares/checkAuth.js';
-import { findUser } from '../middlewares/findUser.js';
+import { findUser } from '../utils/findUser.js';
+import { generateToken } from '../utils/generateToken.js';
+import { createPasswordHash } from '../utils/createPasswordHash.js'
 import { userValidate } from '../validation/validation.js';
 import { taskValidate } from '../validation/validation.js';
-
-const generateToken = (_id) => {
-    return jwt.sign(
-        { _id },
-        process.env.SECRET_KEY,
-        { expiresIn: "2d" }
-    )
-};
-const createPasswordHash = async (password) => {
-    const salt = await bcrypt.genSalt(5);
-    const passwordHash = await bcrypt.hash(password, salt);
-    return passwordHash
-};
 
 const mutationResolver = {
     Mutation: {
