@@ -4,12 +4,7 @@ import jwt from 'jsonwebtoken';
 export const checkAuth = (auth) => {
 
     if (!auth) {
-        throw new GraphQLError("No autorization data", {
-            extensions: {
-                code: 'BAD_REQUEST',
-                http: { status: 400 }
-            }
-        });
+        throw new GraphQLError("No autorization data");
     }
     try {
         const token = auth.split(' ')[1];
@@ -17,12 +12,7 @@ export const checkAuth = (auth) => {
 
         return decoded._id;
     } catch {
-        throw new GraphQLError("Autorization error", {
-            extensions: {
-                code: 'AUTHORIZATION REQUIRED',
-                http: { status: 401 }
-            }
-        });
+        throw new GraphQLError("Autorization error");
     }
 }
 

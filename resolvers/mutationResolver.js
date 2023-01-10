@@ -77,12 +77,7 @@ const mutationResolver = {
                 if (user.avatarURL) {
                     fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
                         if (err) {
-                            throw new GraphQLError("Can't delete avatar", {
-                                extensions: {
-                                    code: 'BAD_REQUEST',
-                                    http: { status: 400 }
-                                }
-                            })
+                            throw new GraphQLError("Can't delete avatar")
                         }
                     })
                 }
@@ -94,12 +89,7 @@ const mutationResolver = {
                     message: 'User successfully deleted'
                 }
             } else {
-                throw new GraphQLError("Authification error", {
-                    extensions: {
-                        code: 'AUTHORIZATION REQUIRED',
-                        http: { status: 401 }
-                    }
-                })
+                throw new GraphQLError("Authification error")
             }
         },
 
@@ -154,12 +144,7 @@ const mutationResolver = {
         uploadAvatar: async (parent, { avatarURL }, contextValue) => {
             const id = checkAuth(contextValue.token);
             if (!avatarURL) {
-                throw new GraphQLError("No data", {
-                    extensions: {
-                        code: 'BAD_REQUEST',
-                        http: { status: 400 }
-                    }
-                });
+                throw new GraphQLError("No data");
             };
 
             await userValidate({ avatarURL });
@@ -169,12 +154,7 @@ const mutationResolver = {
                 { returnDocument: 'after' },
             );
             if (!user) {
-                throw new GraphQLError("Can't find user", {
-                    extensions: {
-                        code: 'NOT_FOUND',
-                        http: { status: 404 }
-                    }
-                })
+                throw new GraphQLError("Can't find user")
             }
 
             return {
@@ -190,12 +170,7 @@ const mutationResolver = {
                 if (user.avatarURL) {
                     fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
                         if (err) {
-                            throw new GraphQLError("Can't delete avatar", {
-                                extensions: {
-                                    code: 'BAD_REQUEST',
-                                    http: { status: 400 }
-                                }
-                            })
+                            throw new GraphQLError("Can't delete avatar")
                         }
                     });
                     const updateUser = await UserModel.findOneAndUpdate(
@@ -210,20 +185,10 @@ const mutationResolver = {
                     }
 
                 } else {
-                    throw new GraphQLError("Avatar URL doesn't exist", {
-                        extensions: {
-                            code: 'BAD_REQUEST',
-                            http: { status: 400 }
-                        }
-                    })
+                    throw new GraphQLError("Avatar URL doesn't exist")
                 }
             } else {
-                throw new GraphQLError("Authification error", {
-                    extensions: {
-                        code: 'AUTHORIZATION REQUIRED',
-                        http: { status: 401 }
-                    }
-                })
+                throw new GraphQLError("Authification error")
             }
         },
 
@@ -266,12 +231,7 @@ const mutationResolver = {
                 }
             );
             if (!status.modifiedCount) {
-                throw new GraphQLError("Modified forbidden", {
-                    extensions: {
-                        code: 'ACCESS_FORBIDDEN',
-                        http: { status: 403 }
-                    }
-                })
+                throw new GraphQLError("Modified forbidden")
             };
 
             return {
@@ -284,12 +244,7 @@ const mutationResolver = {
             const id = checkAuth(contextValue.token);
             const status = await TaskModel.deleteOne({ _id, author: id });
             if (!status.deletedCount) {
-                throw new GraphQLError("Deleted forbidden", {
-                    extensions: {
-                        code: 'ACCESS_FORBIDDEN',
-                        http: { status: 403 }
-                    }
-                })
+                throw new GraphQLError("Deleted forbidden")
             }
 
             return {

@@ -33,21 +33,11 @@ const queryResolver = {
             await userValidate({ email, password });
             const user = await UserModel.findOne({ email });
             if (!user) {
-                throw new GraphQLError("Can't find user", {
-                    extensions: {
-                        code: 'NOT_FOUND',
-                        http: { status: 404 }
-                    }
-                })
+                throw new GraphQLError("Can't find user")
             }
             const isValidPass = await bcrypt.compare(password, user.passwordHash)
             if (!isValidPass) {
-                throw new GraphQLError('Incorrect login or password', {
-                    extensions: {
-                        code: 'BAD_REQUEST',
-                        http: { status: 400 }
-                    }
-                })
+                throw new GraphQLError('Incorrect login or password')
             }
             const token = generateToken(user._id);
             const { _id, name, avatarURL, createdAt } = user;
