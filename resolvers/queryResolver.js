@@ -1,9 +1,11 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { GraphQLError } from 'graphql';
 
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
 import { checkAuth } from '../middlewares/checkAuth.js';
+import { findUser } from '../middlewares/findUser.js';
 import { userValidate } from '../validation/validation.js';
 
 const generateToken = (_id) => {
@@ -19,10 +21,7 @@ const queryResolver = {
 
         getUserByToken: async (parent, args, contextValue) => {
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
+            const user = await findUser(id);
             const { _id, email, name, createdAt, avatarURL } = user;
             return {
                 _id, email, name, createdAt, avatarURL,
@@ -34,11 +33,21 @@ const queryResolver = {
             await userValidate({ email, password });
             const user = await UserModel.findOne({ email });
             if (!user) {
-                throw new Error("Can't find user")
+                throw new GraphQLError("Can't find user", {
+                    extensions: {
+                        code: 'NOT_FOUND',
+                        http: { status: 404 }
+                    }
+                })
             }
             const isValidPass = await bcrypt.compare(password, user.passwordHash)
             if (!isValidPass) {
-                throw new Error('Incorrect login or password')
+                throw new GraphQLError('Incorrect login or password', {
+                    extensions: {
+                        code: 'BAD_REQUEST',
+                        http: { status: 400 }
+                    }
+                })
             }
             const token = generateToken(user._id);
             const { _id, name, avatarURL, createdAt } = user;

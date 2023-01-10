@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
+import { GraphQLError } from 'graphql';
 
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
 import { checkAuth } from '../middlewares/checkAuth.js';
+import { findUser } from '../middlewares/findUser.js';
 import { userValidate } from '../validation/validation.js';
 import { taskValidate } from '../validation/validation.js';
 
@@ -29,7 +31,12 @@ const mutationResolver = {
             const { email, name, password } = registerInput;
             const candidat = await UserModel.findOne({ email });
             if (candidat) {
-                throw new Error(`User ${email} already exist`)
+                throw new GraphQLError(`User ${email} already exist`, {
+                    extensions: {
+                        code: 'BAD_REQUEST',
+                        http: { status: 400 }
+                    }
+                })
             }
             const passwordHash = await createPasswordHash(password);
             const user = await UserModel.create({
@@ -47,17 +54,12 @@ const mutationResolver = {
         },
 
         userUpdateName: async (parent, { name }, contextValue) => {
-            await userValidate({ name });
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
-
             await userValidate({ name });
+            const user = await findUser(id);
 
             if (name === user.name) {
-                throw new Error("The same name!")
+                throw new GraphQLError("The same name!")
             };
             const updatedUser = await UserModel.findOneAndUpdate(
                 { _id: id },
@@ -74,16 +76,18 @@ const mutationResolver = {
 
         userDelete: async (parent, { _id }, contextValue) => {
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
+            const user = await findUser(id);
 
             if (id === _id) {
                 if (user.avatarURL) {
                     fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
                         if (err) {
-                            throw new Error("Can't delete avatar")
+                            throw new GraphQLError("Can't delete avatar", {
+                                extensions: {
+                                    code: 'BAD_REQUEST',
+                                    http: { status: 400 }
+                                }
+                            })
                         }
                     })
                 }
@@ -95,21 +99,23 @@ const mutationResolver = {
                     message: 'User successfully deleted'
                 }
             } else {
-                throw new Error("Authification error")
+                throw new GraphQLError("Authification error", {
+                    extensions: {
+                        code: 'AUTHORIZATION REQUIRED',
+                        http: { status: 401 }
+                    }
+                })
             }
         },
 
         userUpdatePassword: async (parent, { password }, contextValue) => {
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
-
             await userValidate({ password });
+            const user = await findUser(id);
+
             const isValidPass = await bcrypt.compare(password, user.passwordHash);
             if (isValidPass) {
-                throw new Error("The same password!")
+                throw new GraphQLError("The same password!")
             }
             const passwordHash = await createPasswordHash(password);
             const updatedUser = await UserModel.findOneAndUpdate(
@@ -133,12 +139,8 @@ const mutationResolver = {
 
         userConfirmPassword: async (parent, { password }, contextValue) => {
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
-
             await userValidate({ password });
+            const user = await findUser(id);
 
             const isValidPass = await bcrypt.compare(password, user.passwordHash);
             if (!isValidPass) {
@@ -157,7 +159,12 @@ const mutationResolver = {
         uploadAvatar: async (parent, { avatarURL }, contextValue) => {
             const id = checkAuth(contextValue.token);
             if (!avatarURL) {
-                throw new Error("No data");
+                throw new GraphQLError("No data", {
+                    extensions: {
+                        code: 'BAD_REQUEST',
+                        http: { status: 400 }
+                    }
+                });
             };
 
             await userValidate({ avatarURL });
@@ -167,7 +174,12 @@ const mutationResolver = {
                 { returnDocument: 'after' },
             );
             if (!user) {
-                throw new Error("Can't find user")
+                throw new GraphQLError("Can't find user", {
+                    extensions: {
+                        code: 'NOT_FOUND',
+                        http: { status: 404 }
+                    }
+                })
             }
 
             return {
@@ -178,15 +190,17 @@ const mutationResolver = {
 
         deleteAvatar: async (parent, { _id }, contextValue) => {
             const id = checkAuth(contextValue.token);
-            const user = await UserModel.findById(id);
-            if (!user) {
-                throw new Error("Can't find user")
-            }
+            const user = await findUser(id);
             if (id === _id) {
                 if (user.avatarURL) {
                     fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
                         if (err) {
-                            throw new Error("Can't delete avatar")
+                            throw new GraphQLError("Can't delete avatar", {
+                                extensions: {
+                                    code: 'BAD_REQUEST',
+                                    http: { status: 400 }
+                                }
+                            })
                         }
                     });
                     const updateUser = await UserModel.findOneAndUpdate(
@@ -201,10 +215,20 @@ const mutationResolver = {
                     }
 
                 } else {
-                    throw new Error("Avatar URL doesn't exist")
+                    throw new GraphQLError("Avatar URL doesn't exist", {
+                        extensions: {
+                            code: 'BAD_REQUEST',
+                            http: { status: 400 }
+                        }
+                    })
                 }
             } else {
-                throw new Error("Authification error")
+                throw new GraphQLError("Authification error", {
+                    extensions: {
+                        code: 'AUTHORIZATION REQUIRED',
+                        http: { status: 401 }
+                    }
+                })
             }
         },
 
@@ -247,7 +271,12 @@ const mutationResolver = {
                 }
             );
             if (!status.modifiedCount) {
-                throw new Error("Modified forbidden")
+                throw new GraphQLError("Modified forbidden", {
+                    extensions: {
+                        code: 'ACCESS_FORBIDDEN',
+                        http: { status: 403 }
+                    }
+                })
             };
 
             return {
@@ -260,7 +289,12 @@ const mutationResolver = {
             const id = checkAuth(contextValue.token);
             const status = await TaskModel.deleteOne({ _id, author: id });
             if (!status.deletedCount) {
-                throw new Error("Deleted forbidden")
+                throw new GraphQLError("Deleted forbidden", {
+                    extensions: {
+                        code: 'ACCESS_FORBIDDEN',
+                        http: { status: 403 }
+                    }
+                })
             }
 
             return {

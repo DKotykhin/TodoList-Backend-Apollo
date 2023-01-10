@@ -7,6 +7,14 @@ export const typeDefs = `#graphql
         email: String!
         avatarURL: String        
         createdAt: Date        
+        message: String              
+    }
+    type UserWithToken {
+        _id: ID!
+        name: String!
+        email: String!
+        avatarURL: String        
+        createdAt: Date        
         token: String
         message: String              
     }
@@ -76,8 +84,15 @@ export const typeDefs = `#graphql
         sortOrder: Int
         search: String
     }
-    input TaskInput {
-        _id: ID       
+    input TaskAddInput {     
+        title: String!
+        subtitle: String
+        description: String
+        completed: Boolean
+        deadline: Date        
+    }
+    input TaskUpdateInput {
+        _id: ID!      
         title: String!
         subtitle: String
         description: String
@@ -88,19 +103,19 @@ export const typeDefs = `#graphql
     type Query {        
         getUserByToken: User        
         getTasks(paramsInput: TaskParamsInput): getTasksResponse
-        userLogin(email: String!, password: String!): User
+        userLogin(email: String!, password: String!): UserWithToken
     }
     
     type Mutation {
-        userRegister(registerInput: UserRegisterInput): User
+        userRegister(registerInput: UserRegisterInput): UserWithToken
         userDelete(_id: ID!): UserDeleteResponse
         userUpdateName(name: String!): User
         userConfirmPassword(password: String!): UserPasswordResponse
         userUpdatePassword(password: String!): UserPasswordResponse
         uploadAvatar(avatarURL: String!): UserAvatarResponse
         deleteAvatar(_id: ID!): UserAvatarResponse
-        createTask(createTaskInput: TaskInput): Task
-        updateTask(updateTaskInput: TaskInput): TaskUpdateResponse
+        createTask(createTaskInput: TaskAddInput): Task
+        updateTask(updateTaskInput: TaskUpdateInput): TaskUpdateResponse
         deleteTask(_id: ID!): TaskDeleteResponse
     }
 `;
