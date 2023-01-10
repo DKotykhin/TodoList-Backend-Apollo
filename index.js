@@ -34,9 +34,9 @@ const port = process.env.PORT || 4001;
 const server = new ApolloServer({
     typeDefs,
     resolvers: { ...queryResolver, ...mutationResolver },
-    formatError: (formattedError, error) => {
-        return error
-    },
+    // formatError: (formattedError, error) => {
+    //     return error
+    // },
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), {
         async serverWillStart() {
             console.log(`Apollo server has been started on port ${port}`);
