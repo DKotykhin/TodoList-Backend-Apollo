@@ -31,12 +31,7 @@ const mutationResolver = {
             const { email, name, password } = registerInput;
             const candidat = await UserModel.findOne({ email });
             if (candidat) {
-                throw new GraphQLError(`User ${email} already exist`, {
-                    extensions: {
-                        code: 'BAD_REQUEST',
-                        http: { status: 400 }
-                    }
-                })
+                throw new GraphQLError(`User ${email} already exist`)
             }
             const passwordHash = await createPasswordHash(password);
             const user = await UserModel.create({
