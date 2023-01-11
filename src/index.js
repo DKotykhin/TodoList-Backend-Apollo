@@ -7,6 +7,7 @@ import http from 'http';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
 
 import router from './router/router.js';
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -34,14 +35,20 @@ const port = process.env.PORT || 4001;
 const server = new ApolloServer({
     typeDefs,
     resolvers: { ...queryResolver, ...mutationResolver },
-    formatError: (formattedError, error) => {
-        return error
-    },
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), {
-        async serverWillStart() {
-            console.log(`Apollo server has been started on port ${port}`);
+    // formatError: (formattedError, error) => {
+    //     return error
+    // },
+    plugins: [
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        {
+            async serverWillStart() {
+                console.log(`Apollo server has been started on port ${port}`);
+            },
         },
-    }],
+        process.env.NODE_ENV === 'production'
+            ? ApolloServerPluginLandingPageProductionDefault()
+            : ApolloServerPluginLandingPageLocalDefault(),
+    ],
 });
 
 await server.start();
