@@ -8,8 +8,7 @@ import { checkAuth } from '../middlewares/checkAuth.js';
 import { findUser } from '../utils/findUser.js';
 import { generateToken } from '../utils/generateToken.js';
 import { createPasswordHash } from '../utils/createPasswordHash.js'
-import { userValidate } from '../validation/validation.js';
-import { taskValidate } from '../validation/validation.js';
+import { userValidate, taskValidate } from '../validation/validation.js';
 
 const mutationResolver = {
     Mutation: {
