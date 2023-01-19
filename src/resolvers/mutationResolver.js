@@ -1,33 +1,13 @@
-import bcrypt from 'bcrypt';
-import fs from 'fs';
-import { GraphQLError } from 'graphql';
-
-import UserModel from '../models/User.js';
-import TaskModel from '../models/Task.js';
-import { checkAuth } from '../middlewares/checkAuth.js';
-import { findUser } from '../utils/findUser.js';
-import { generateToken } from '../utils/generateToken.js';
-import { createPasswordHash } from '../utils/createPasswordHash.js'
-import { userValidate, taskValidate } from '../validation/validation.js';
+import userService from '../service/userService.js';
+import avatarService from '../service/avatarService.js';
+import taskService from '../service/taskService.js';
 
 const mutationResolver = {
     Mutation: {
 
         userRegister: async (parent, { registerInput }) => {
-            await userValidate(registerInput);
-            const { email, name, password } = registerInput;
-            const candidat = await UserModel.findOne({ email });
-            if (candidat) {
-                throw new GraphQLError(`User ${email} already exist`)
-            }
-            const passwordHash = await createPasswordHash(password);
-            const user = await UserModel.create({
-                email,
-                passwordHash,
-                name,
-            });
-            const token = generateToken(user._id);
-            const { _id, createdAt } = user;
+            const user = await userService.register(registerInput);
+            const { user: { _id, email, name, createdAt }, token } = user;
 
             return {
                 _id, email, name, createdAt, token,
@@ -36,113 +16,43 @@ const mutationResolver = {
         },
 
         userUpdateName: async (parent, { name }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            await userValidate({ name });
-            const user = await findUser(id);
-
-            if (name === user.name) {
-                throw new GraphQLError("The same name!")
-            };
-            const updatedUser = await UserModel.findOneAndUpdate(
-                { _id: id },
-                { name },
-                { returnDocument: 'after' },
-            );
+            const updatedUser = await userService.updateName(name, contextValue.token);
             const { _id, email, avatarURL, createdAt } = updatedUser;
 
             return {
-                _id, email, name: updatedUser.name, avatarURL, createdAt,
-                message: `User ${updatedUser.name} successfully updated`,
+                _id, email, name, avatarURL, createdAt,
+                message: `User ${name} successfully updated`,
             };
         },
 
-        userDelete: async (parent, { _id }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            const user = await findUser(id);
+        userConfirmPassword: async (parent, { password }, contextValue) => {
+            const status = await userService.confirmPassword(password, contextValue.token);
 
-            if (id === _id) {
-                if (user.avatarURL) {
-                    fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
-                        if (err) {
-                            throw new GraphQLError("Can't delete avatar")
-                        }
-                    })
-                }
-                const taskStatus = await TaskModel.deleteMany({ author: id });
-                const userStatus = await UserModel.deleteOne({ _id: id });
-
-                return {
-                    taskStatus, userStatus,
-                    message: 'User successfully deleted'
-                }
-            } else {
-                throw new GraphQLError("Authification error")
-            }
+            return status;
         },
 
         userUpdatePassword: async (parent, { password }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            await userValidate({ password });
-            const user = await findUser(id);
-
-            const isValidPass = await bcrypt.compare(password, user.passwordHash);
-            if (isValidPass) {
-                throw new GraphQLError("The same password!")
-            }
-            const passwordHash = await createPasswordHash(password);
-            const updatedUser = await UserModel.findOneAndUpdate(
-                { _id: id },
-                { passwordHash },
-                { returnDocument: 'after' },
-            );
+            const updatedUser = await userService.updatePassword(password, contextValue.token);
 
             if (updatedUser) {
                 return {
                     status: true,
                     message: "Password successfully updated",
                 };
-            } else {
-                return {
-                    status: false,
-                    message: "Can't change password",
-                };
             }
         },
 
-        userConfirmPassword: async (parent, { password }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            await userValidate({ password });
-            const user = await findUser(id);
+        userDelete: async (parent, { _id }, contextValue) => {
+            const status = await userService.delete(_id, contextValue.token);
 
-            const isValidPass = await bcrypt.compare(password, user.passwordHash);
-            if (!isValidPass) {
-                return {
-                    status: false,
-                    message: "Wrong password!"
-                }
-            } else {
-                return {
-                    status: true,
-                    message: 'Password confirmed'
-                }
-            }
+            return {
+                ...status,
+                message: 'User successfully deleted'
+            };
         },
 
         uploadAvatar: async (parent, { avatarURL }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            if (!avatarURL) {
-                throw new GraphQLError("No data");
-            };
-
-            await userValidate({ avatarURL });
-            const user = await UserModel.findOneAndUpdate(
-                { _id: id },
-                { avatarURL, },
-                { returnDocument: 'after' },
-            );
-            if (!user) {
-                throw new GraphQLError("Can't find user")
-            }
+            const user = await avatarService.uploadUrl(avatarURL, contextValue.token);
 
             return {
                 avatarURL: user.avatarURL,
@@ -151,48 +61,18 @@ const mutationResolver = {
         },
 
         deleteAvatar: async (parent, { _id }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            const user = await findUser(id);
-            if (id === _id) {
-                if (user.avatarURL) {
-                    fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
-                        if (err) {
-                            throw new GraphQLError("Can't delete avatar")
-                        }
-                    });
-                    const updateUser = await UserModel.findOneAndUpdate(
-                        { _id: id },
-                        { avatarURL: '' },
-                        { returnDocument: 'after' },
-                    );
+            const updatedUser = await avatarService.delete(_id, contextValue.token);
+            const { avatarURL } = updatedUser;
 
-                    return {
-                        avatarURL: updateUser.avatarURL,
-                        message: "Avatar successfully deleted.",
-                    }
-
-                } else {
-                    throw new GraphQLError("Avatar URL doesn't exist")
-                }
-            } else {
-                throw new GraphQLError("Authification error")
+            return {
+                avatarURL,
+                message: "Avatar successfully deleted.",
             }
         },
 
         createTask: async (parent, { createTaskInput }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            await taskValidate(createTaskInput);
-            const { title, subtitle, description, completed, deadline } = createTaskInput;
-            const doc = new TaskModel({
-                title,
-                subtitle,
-                description,
-                completed,
-                deadline,
-                author: id
-            });
-            const task = await doc.save();
-            const { _id, createdAt } = task;
+            const newTask = await taskService.create(createTaskInput, contextValue.token);
+            const { _id, title, subtitle, description, completed, createdAt, deadline } = newTask;
 
             return {
                 _id, title, subtitle, description, completed, createdAt, deadline,
@@ -201,38 +81,17 @@ const mutationResolver = {
         },
 
         updateTask: async (parent, { updateTaskInput }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            await taskValidate(updateTaskInput);
-
-            const { title, subtitle, description, _id, completed, deadline } = updateTaskInput;
-            const status = await TaskModel.updateOne(
-                { _id, author: id },
-                {
-                    $set: {
-                        title,
-                        subtitle,
-                        description,
-                        completed,
-                        deadline
-                    }
-                }
-            );
-            if (!status.modifiedCount) {
-                throw new GraphQLError("Modified forbidden")
-            };
+            const updatedTask = await taskService.update(updateTaskInput, contextValue.token);
+            const { _id, title, subtitle, description, completed, createdAt, deadline } = updatedTask;
 
             return {
-                status,
+                _id, title, subtitle, description, completed, createdAt, deadline,
                 message: 'Task successfully updated'
             };
         },
 
         deleteTask: async (parent, { _id }, contextValue) => {
-            const id = checkAuth(contextValue.token);
-            const status = await TaskModel.deleteOne({ _id, author: id });
-            if (!status.deletedCount) {
-                throw new GraphQLError("Deleted forbidden")
-            }
+            const status = await taskService.delete(_id, contextValue.token)
 
             return {
                 status,
