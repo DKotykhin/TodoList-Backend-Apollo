@@ -60,6 +60,13 @@ export const typeDefs = `#graphql
         tasksOnPageQty: Int
         tasks: [Task]
     }
+    type TaskStatisticResponse {
+        totalTasks: Int
+        completedTasks: Int
+        activeTasks: Int
+        overdueTasks: Int
+        message: String
+}
 
     input UserRegisterInput {        
         name: String!
@@ -94,6 +101,7 @@ export const typeDefs = `#graphql
         getUserByToken: User        
         getTasks(paramsInput: TaskParamsInput): getTasksResponse
         userLogin(email: String!, password: String!): UserWithToken
+        getStatistic: TaskStatisticResponse
     }
     
     type Mutation {

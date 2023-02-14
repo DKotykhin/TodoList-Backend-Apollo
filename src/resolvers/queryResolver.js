@@ -29,6 +29,14 @@ const queryResolver = {
 
             return tasksData;
         },
+
+        getStatistic: async (parent, args, contextValue) => {
+            const taskStatistic = await userService.statistic(contextValue.token);
+            return {
+                ...taskStatistic,
+                message: 'Statistic successfully obtained'
+            };
+        }
     },
 };
 
