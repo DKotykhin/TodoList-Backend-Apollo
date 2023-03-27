@@ -66,7 +66,7 @@ export const typeDefs = `#graphql
         activeTasks: Int
         overdueTasks: Int
         message: String
-}
+    }
 
     input UserRegisterInput {        
         name: String!
