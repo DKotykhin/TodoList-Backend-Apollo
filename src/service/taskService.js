@@ -13,23 +13,30 @@ class TaskService {
 
         const tasksOnPage = limit > 0 ? limit : 6;
         const parsePage = page > 0 ? page : 1;
-        const parseSortOrder = sortOrder === -1 ? -1 : sortOrder === 1 ? 1 : -1;
+        const parseSortOrder = sortOrder === -1 ? -1 : sortOrder === 1 ? 1 : 1;
 
         let sortKey = {};
         switch (sortField) {
-            case "createdAt": sortKey = { [sortField]: parseSortOrder };
+            case "createdAt": sortKey = { [sortField]: -parseSortOrder };
                 break;
-            case "deadline": sortKey = { [sortField]: -parseSortOrder };
+            case "deadline": sortKey = { [sortField]: parseSortOrder };
                 break;
-            case "title": sortKey = { [sortField]: -parseSortOrder };
+            case "title": sortKey = { [sortField]: parseSortOrder };
                 break;
-            default: sortKey = { createdAt: -1 };
+            default: sortKey = { createdAt: 1 };
         };
 
         let taskFilter = {};
         switch (tabKey) {
-            case '1':
+            case '0':
                 taskFilter = { author: userId, completed: false };
+                break;
+            case '1':
+                taskFilter = {
+                    author: userId,
+                    deadline: { $lt: new Date() },
+                    completed: false,
+                };
                 break;
             case '2':
                 taskFilter = { author: userId, completed: true };
@@ -37,7 +44,7 @@ class TaskService {
             default:
                 taskFilter = { author: userId };
         };
-        
+
         if (search) taskFilter =
             { ...taskFilter, title: { $regex: search, $options: 'i' } };
 
