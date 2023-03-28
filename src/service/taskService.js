@@ -28,17 +28,17 @@ class TaskService {
 
         let taskFilter = {};
         switch (tabKey) {
-            case '0':
+            case 0:
                 taskFilter = { author: id, completed: false };
                 break;
-            case '1':
+            case 1:
                 taskFilter = {
                     author: id,
                     deadline: { $lt: new Date() },
                     completed: false,
                 };
                 break;
-            case '2':
+            case 2:
                 taskFilter = { author: id, completed: true };
                 break;
             default:
