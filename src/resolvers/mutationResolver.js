@@ -72,20 +72,18 @@ const mutationResolver = {
 
         createTask: async (parent, { createTaskInput }, contextValue) => {
             const newTask = await taskService.create(createTaskInput, contextValue.token);
-            const { _id, title, subtitle, description, completed, createdAt, deadline } = newTask;
 
             return {
-                _id, title, subtitle, description, completed, createdAt, deadline,
+                ...newTask._doc,
                 message: 'Task successfully created'
             };
         },
 
         updateTask: async (parent, { updateTaskInput }, contextValue) => {
             const updatedTask = await taskService.update(updateTaskInput, contextValue.token);
-            const { _id, title, subtitle, description, completed, createdAt, deadline } = updatedTask;
 
             return {
-                _id, title, subtitle, description, completed, createdAt, deadline,
+                ...updatedTask._doc,
                 message: 'Task successfully updated'
             };
         },

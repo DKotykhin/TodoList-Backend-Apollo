@@ -51,15 +51,10 @@ class TaskService {
         const totalTasksQty = (await TaskModel.find(taskFilter)).length;
         const totalPagesQty = Math.ceil(totalTasksQty / tasksOnPage);
 
-        const tasks = await TaskModel.find(taskFilter, {
-            _id: true,
-            title: true,
-            subtitle: true,
-            description: true,
-            completed: true,
-            createdAt: true,
-            deadline: true
-        }).sort(sortKey).limit(tasksOnPage).skip((parsePage - 1) * tasksOnPage);
+        const tasks = await TaskModel.find(taskFilter, { author: false })
+            .sort(sortKey)
+            .limit(tasksOnPage)
+            .skip((parsePage - 1) * tasksOnPage);
 
         const tasksOnPageQty = tasks.length;
 
@@ -100,7 +95,7 @@ class TaskService {
                     deadline
                 }
             },
-            { returnDocument: 'after' },
+            { returnDocument: 'after', fields: { author: false } },
         );
         if (!updatedTask) {
             throw new GraphQLError("Modified forbidden")
