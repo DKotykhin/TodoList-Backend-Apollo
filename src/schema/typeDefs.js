@@ -44,6 +44,7 @@ export const typeDefs = `#graphql
         deadline: Date
         createdAt: Date
         updatedAt: Date
+        completedAt: Date
         message: String
     }    
     type TaskDeleteResponse {

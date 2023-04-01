@@ -17,7 +17,8 @@ const taskSchema = new Schema({
         type: Boolean,
         default: false
     },
-    deadline: Date
+    completedAt: Date,
+    deadline: Date,
 }, {
     timestamps: true,
     versionKey: false

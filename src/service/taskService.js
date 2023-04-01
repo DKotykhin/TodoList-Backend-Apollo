@@ -84,6 +84,9 @@ class TaskService {
         const id = checkAuth(token);
         const { title, subtitle, description, _id, completed, deadline } = data;
 
+        let completedAt = null;
+        if (completed) completedAt = new Date();
+
         const updatedTask = await TaskModel.findOneAndUpdate(
             { _id, author: id },
             {
@@ -92,7 +95,8 @@ class TaskService {
                     subtitle,
                     description,
                     completed,
-                    deadline
+                    deadline,
+                    createdAt,
                 }
             },
             { returnDocument: 'after', fields: { author: false } },
