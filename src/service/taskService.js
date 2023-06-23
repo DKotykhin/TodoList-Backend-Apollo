@@ -96,7 +96,6 @@ class TaskService {
                     description,
                     completed,
                     deadline,
-                    createdAt,
                 }
             },
             { returnDocument: 'after', fields: { author: false } },

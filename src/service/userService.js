@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 
 import UserModel from '../models/User.js';
 import TaskModel from '../models/Task.js';
@@ -132,7 +133,7 @@ class UserService {
 
     async statistic(token) {
         const _id = checkAuth(token);
-        const tasks = await this.TaskModel
+        const tasks = await TaskModel
             .aggregate()
             .match({ author: new Types.ObjectId(_id) })
             .group({
@@ -144,10 +145,9 @@ class UserService {
                     $sum: { $cond: [{ $lt: ['$deadline', new Date()] }, 1, 0] },
                 },
             });
-
-        const activeTasks = tasks?.find((res) => res._id === false).count || 0;
-        const overdueTasks = tasks?.find((res) => res._id === false).overdue || 0;
-        const completedTasks = tasks?.find((res) => res._id === true).count || 0;
+        const activeTasks = tasks?.find((res) => res._id === false)?.count || 0;
+        const overdueTasks = tasks?.find((res) => res._id === false)?.overdue || 0;
+        const completedTasks = tasks?.find((res) => res._id === true)?.count || 0;
 
         return {
             totalTasks: activeTasks + completedTasks,
