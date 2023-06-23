@@ -25,7 +25,7 @@ class UserService {
         const { email, name, password } = data;
         const candidat = await UserModel.findOne({ email });
         if (candidat) {
-            throw new GraphQLError(`User ${email} already exist`)
+            throw new GraphQLError(`User ${email} already exist`, { extensions: { code: 'BAD_USER_INPUT' } })
         }
         const passwordHash = await createPasswordHash(password);
         const user = await UserModel.create({
@@ -43,11 +43,11 @@ class UserService {
         const { email, password } = data;
         const user = await UserModel.findOne({ email });
         if (!user) {
-            throw new GraphQLError("Can't find user")
+            throw new GraphQLError("Can't find user", { extensions: { code: 'BAD_USER_INPUT' } })
         }
         const isValidPass = await bcrypt.compare(password, user.passwordHash)
         if (!isValidPass) {
-            throw new GraphQLError('Incorrect login or password')
+            throw new GraphQLError('Incorrect login or password', { extensions: { code: 'BAD_USER_INPUT' } })
         }
         const token = generateToken(user._id);
 
@@ -60,7 +60,7 @@ class UserService {
         const user = await findUser(_id);
 
         if (name === user.name) {
-            throw new GraphQLError("The same name!")
+            throw new GraphQLError("The same name!", { extensions: { code: 'BAD_USER_INPUT' } })
         };
 
         const updatedUser = await UserModel.findOneAndUpdate(
@@ -79,10 +79,7 @@ class UserService {
 
         const isValidPass = await bcrypt.compare(password, user.passwordHash);
         if (!isValidPass) {
-            return {
-                status: false,
-                message: "Wrong password!"
-            }
+            throw new GraphQLError("Wrong password!", { extensions: { code: 'BAD_USER_INPUT' } })
         } else return {
             status: true,
             message: 'Password confirmed'
@@ -97,7 +94,7 @@ class UserService {
 
         const isValidPass = await bcrypt.compare(password, user.passwordHash);
         if (isValidPass) {
-            throw new GraphQLError("The same password!")
+            throw new GraphQLError("The same password!", { extensions: { code: 'BAD_USER_INPUT' } })
         }
         const passwordHash = await createPasswordHash(password);
         const updatedUser = await UserModel.findOneAndUpdate(
@@ -120,7 +117,7 @@ class UserService {
             if (user.avatarURL) {
                 fs.unlink("uploads/" + user.avatarURL.split('/')[2], async (err) => {
                     if (err) {
-                        throw new GraphQLError("Can't delete avatar")
+                        throw new GraphQLError("Can't delete avatar", { extensions: { code: 'FORBIDDEN' } })
                     }
                 })
             }
@@ -135,33 +132,29 @@ class UserService {
 
     async statistic(token) {
         const _id = checkAuth(token);
-        const totalTasks = TaskModel.countDocuments(
-            { author: _id }
-        );
-        const completedTasks = TaskModel.countDocuments(
-            {
-                author: _id,
-                completed: true
-            }
-        );
-        const overdueTasks = TaskModel.countDocuments(
-            {
-                author: _id,
-                deadline: { $lt: new Date() },
-                completed: false
-            }
-        );
-        const values = Promise.all([totalTasks, completedTasks, overdueTasks]).then(values => {
-            const activeTasks = values[0] - values[1];
-            return {
-                totalTasks: values[0],
-                completedTasks: values[1],
-                activeTasks,
-                overdueTasks: values[2]
-            }
-        });
+        const tasks = await this.TaskModel
+            .aggregate()
+            .match({ author: new Types.ObjectId(_id) })
+            .group({
+                _id: '$completed',
+                count: {
+                    $sum: 1,
+                },
+                overdue: {
+                    $sum: { $cond: [{ $lt: ['$deadline', new Date()] }, 1, 0] },
+                },
+            });
 
-        return values;
+        const activeTasks = tasks?.find((res) => res._id === false).count || 0;
+        const overdueTasks = tasks?.find((res) => res._id === false).overdue || 0;
+        const completedTasks = tasks?.find((res) => res._id === true).count || 0;
+
+        return {
+            totalTasks: activeTasks + completedTasks,
+            completedTasks,
+            activeTasks,
+            overdueTasks,
+        };
     }
 }
 

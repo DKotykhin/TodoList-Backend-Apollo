@@ -1,5 +1,6 @@
 import multer from 'multer';
 import fs from 'fs';
+import path from 'path';
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -9,7 +10,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads')
     },
     filename: function (req, file, cb) {
-        cb(null, req.userId + '-' + file.originalname)
+        cb(null, req.userId + '-avatar' + path.extname(file.originalname))
     }
 });
 
