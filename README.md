@@ -9,14 +9,15 @@ Backend for Todo List application
 
 ## Technologies
 
--   Backend: Node JS, Apollo, Express, Mongoose, Multer, Yup, JWT, Nodemailer, Sharp, Bcrypt
--   Frontend: React, Redux Toolkit, Axios, Typescript, React Hook Form, MUI, Markdown, Tostify, SCSS
+-   Node JS, Apollo, GraphQL, Express, Mongoose, Multer, Yup, JWT, Nodemailer, Sharp, Bcrypt
 -   Database: Mongo DB
 
 ## Features
 
 -   Apollo server
--   GraphQL
+-   Full CRUD operations for users and tasks
+-   JWT Token for authification
+-   GraphQL API
 -   Static folder
 -   Body validation (Yup)
 -   File uploads (Multer)
@@ -24,8 +25,9 @@ Backend for Todo List application
 -   Restore password via email
 -   Check Auth middleware
 -   Task and User Mongoose models
+-   User and task statistic
 -   Error handler
--   Bcrypt for password field
+-   Bcrypt for password hash
 
 
 ## Environment Variables
