@@ -22,6 +22,10 @@ export const typeDefs = `#graphql
         status: Boolean
         message: String
     }
+    type ResetPasswordResponse {
+        status: String
+        message: String
+    }
     type UserDeleteResponse {
         taskStatus: UserDeleteStatus
         userStatus: UserDeleteStatus
@@ -73,7 +77,11 @@ export const typeDefs = `#graphql
         name: String!
         email: String!
         password: String!          
-    }       
+    }
+    input UserSetPasswordInput {
+        token: String!
+        password: String!
+    }      
     input TaskParamsInput {
         limit: Int
         page: Int
@@ -107,10 +115,12 @@ export const typeDefs = `#graphql
     
     type Mutation {
         userRegister(registerInput: UserRegisterInput): UserWithToken
-        userDelete(_id: ID!): UserDeleteResponse
         userUpdateName(name: String!): User
         userConfirmPassword(password: String!): UserPasswordResponse
         userUpdatePassword(password: String!): UserPasswordResponse
+        userResetPassword(email: String!): ResetPasswordResponse
+        userSetNewPassword(setPasswordInput: UserSetPasswordInput): UserPasswordResponse
+        userDelete(_id: ID!): UserDeleteResponse
         uploadAvatar(avatarURL: String!): UserAvatarResponse
         deleteAvatar(_id: ID!): UserAvatarResponse
         createTask(createTaskInput: TaskAddInput): Task

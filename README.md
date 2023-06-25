@@ -9,7 +9,7 @@ Backend for Todo List application
 
 ## Technologies
 
--   Backend: Node JS, Express JS, Mongoose, Multer, Yup, JWT, Bcrypt
+-   Backend: Node JS, Apollo, Express, Mongoose, Multer, Yup, JWT, Nodemailer, Sharp, Bcrypt
 -   Frontend: React, Redux Toolkit, Axios, Typescript, React Hook Form, MUI, Markdown, Tostify, SCSS
 -   Database: Mongo DB
 
@@ -20,11 +20,12 @@ Backend for Todo List application
 -   Static folder
 -   Body validation (Yup)
 -   File uploads (Multer)
+-   Resize upload images and change format
+-   Restore password via email
 -   Check Auth middleware
 -   Task and User Mongoose models
 -   Error handler
 -   Bcrypt for password field
--   Resolvers for actions
 
 
 ## Environment Variables
@@ -34,6 +35,9 @@ To run this project, you will need to add the following environment variables to
 `PORT`
 `MONGO_DB` 
 `SECRET_KEY`
+`EMAIL_USER`
+`EMAIL_PASS`
+`FRONT_URL`
 
 
 ## Deploy on Heroku

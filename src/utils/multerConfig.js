@@ -1,6 +1,5 @@
 import multer from 'multer';
 import fs from 'fs';
-import path from 'path';
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -10,17 +9,15 @@ const storage = multer.diskStorage({
         cb(null, 'uploads')
     },
     filename: function (req, file, cb) {
-        cb(null, req.userId + '-avatar' + path.extname(file.originalname))
+        cb(null, file.originalname)
     }
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'image/jpeg' ||
-        file.mimetype === 'image/webp' ||
-        file.mimetype === 'image/png') {
+    if (file.mimetype.startsWith("image")) {
         cb(null, true)
     } else {
-        cb(new Error('Wrong file format'), false)
+        cb(new Error('Wrong file format. Please upload only images'), false)
     }
 }
 

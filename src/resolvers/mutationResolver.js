@@ -42,6 +42,26 @@ const mutationResolver = {
             }
         },
 
+        userResetPassword: async (parent, { email }) => {
+            const status = await userService.resetPassword(email);
+
+            return {
+                status: status.response,
+                message: `Email successfully sent to ${status.accepted}`,
+            };
+        },
+
+        userSetNewPassword: async (parent, { setPasswordInput }) => {
+            const updatedUser = await userService.setNewPassword(setPasswordInput);
+
+            if (updatedUser) {
+                return {
+                    status: true,
+                    message: `${updatedUser.name} password successfully updated`,
+                };
+            }
+        },
+
         userDelete: async (parent, { _id }, contextValue) => {
             const status = await userService.delete(_id, contextValue.token);
 

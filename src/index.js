@@ -1,6 +1,5 @@
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from 'dotenv';
 import cors from 'cors';
 import http from 'http';
 
@@ -14,7 +13,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { queryResolver, mutationResolver } from "./resolvers/index.js";
 import { typeDefs } from "./schema/typeDefs.js";
 
-dotenv.config();
+import 'dotenv/config';
 
 mongoose.set({ strictQuery: true });
 mongoose

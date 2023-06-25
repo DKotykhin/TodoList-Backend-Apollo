@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 
@@ -9,8 +10,9 @@ import { checkAuth } from '../middlewares/checkAuth.js';
 import { userValidate } from '../validation/validation.js';
 
 import { findUser } from '../utils/findUser.js';
-import { generateToken } from '../utils/generateToken.js'
-import { createPasswordHash } from '../utils/createPasswordHash.js'
+import { generateToken } from '../utils/generateToken.js';
+import { createPasswordHash } from '../utils/createPasswordHash.js';
+import { mailConfig } from '../utils/mailConfig.js';
 
 class UserService {
 
@@ -107,6 +109,56 @@ class UserService {
             throw new GraphQLError("Can't change password")
         }
         return updatedUser;
+    }
+
+    async resetPassword(email) {
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            throw new GraphQLError("Can't find user", { extensions: { code: 'BAD_USER_INPUT' } })
+        }
+
+        const buffer = crypto.randomBytes(16);
+        if (!buffer) throw new GraphQLError("Something get wrong")
+        const token = buffer.toString('hex');
+
+        let status;
+        try {
+            status = await mailConfig(token, email);
+        } catch (err) {
+            throw new GraphQLError(err.message || "Can't send email")
+        }
+
+        const updatedUser = await UserModel.findOneAndUpdate(
+            { email },
+            {
+                'resetPassword.token': token,
+                'resetPassword.expire': Date.now() + (3600 * 1000),
+            },
+            { returnDocument: 'after' },
+        );
+        if (!updatedUser) {
+            throw new GraphQLError("Can't reset password")
+        } else return status;
+    }
+
+    async setNewPassword({ token, password }) {
+
+        const passwordHash = await createPasswordHash(password);
+        const updatedUser = await UserModel.findOneAndUpdate(
+            { 'resetPassword.token': token, 'resetPassword.expire': { $gt: Date.now() } },
+            {
+                $set: {
+                    passwordHash,
+                    'resetPassword.token': null,
+                    'resetPassword.expire': null,
+                    'resetPassword.changed': Date.now(),
+                }
+            },
+            { returnDocument: 'after' },
+        );
+        if (!updatedUser) {
+            throw new GraphQLError("Can't set new password")
+        } else return updatedUser;
     }
 
     async delete(_id, token) {
